@@ -1,0 +1,14 @@
+name: SwiftCompilationDatabase
+
+targets:
+  ModuleA:
+    type: framework
+    platform: iOS
+    sources: [Sources/ModuleA]
+
+  ModuleB:
+    type: framework
+    platform: iOS
+    sources: [Sources/ModuleB]
+    dependencies: 
+      - target: "ModuleA"
