@@ -27,6 +27,9 @@ run_swiftlint_using_compilation_database:
 run_swiftlint_using_xcodebuild_log:
 	mint run realm/SwiftLint@0.45.0 analyze --compiler-log-path outputs/xcodebuild.log
 
+bazel_build:
+	bazelisk build -s ...
+
 go_with_bazel_compilation_database: setup generate_compilation_database_from_bazel run_swiftlint_using_compilation_database
 go_with_xcodebuild_compilation_database: setup gen_project generate_xcodebuild_log generate_compilation_database_from_xcodebuild run_swiftlint_using_compilation_database
 go_with_xcodebuild: setup gen_project generate_xcodebuild_log run_swiftlint_using_xcodebuild_log
