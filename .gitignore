@@ -145,3 +145,4 @@ xcuserdata
 
 outputs/
 vendor/
+bazel-*

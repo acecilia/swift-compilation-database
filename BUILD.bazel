@@ -1,0 +1,12 @@
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+
+swift_library(
+    name = "ModuleA", 
+    srcs = glob(["Sources/ModuleA/**/*.swift"]),
+)
+
+swift_library(
+    name = "ModuleB", 
+    srcs = glob(["Sources/ModuleB/**/*.swift"]),
+    deps = [":ModuleA"],
+)

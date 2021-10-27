@@ -1,2 +1,6 @@
 analyzer_rules:
   - unused_import
+  - unused_declaration
+
+unused_declaration:
+  include_public_and_open: true
