@@ -8,30 +8,35 @@ func bazel(arguments: [String]) throws {
         exit(1)
     }
 
-    let bazelOutputPath = "bazel-out/darwin-fastbuild/bin"
-    let compilerArgumentFiles = try FileManager.default
-        .contentsOfDirectory(atPath: bazelOutputPath)
-        .filter { $0.hasSuffix(".swiftmodule-0.params") }
-        .map { "\(bazelOutputPath)/\($0)" }
+    let developerDir = try run("xcrun xcode-select -p").trimmingCharacters(in: .whitespacesAndNewlines)
+    let sdkDir = try run("xcrun --show-sdk-path").trimmingCharacters(in: .whitespacesAndNewlines)
+
+    let targets = try run("bazelisk query 'kind('swift_library', //...)'")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .components(separatedBy: .newlines)
+        .joined(separator: " + ")
+    let outputString = try run("bazel aquery 'mnemonic('SwiftCompile', \(targets))' --output=jsonproto")
+    let decoder = JSONDecoder()
+    let output = try decoder.decode(Output.self, from: Data(outputString.utf8))
 
     var entries: [CompilationDatabaseEntry] = []
-    for compilerArgumentFile in compilerArgumentFiles {
-        let url = URL(fileURLWithPath: compilerArgumentFile)
-        let compilerArguments = try String(contentsOf: url)
-            .replacingOccurrences(of: "Sources/", with: "\(FileManager.default.currentDirectoryPath)/Sources/")
-            .replacingOccurrences(of: "bazel-out/", with: "\(FileManager.default.currentDirectoryPath)/bazel-out/")
-            .replacingOccurrences(
-                of: "__BAZEL_XCODE_SDKROOT__",
-                with: "/Applications/Xcode_12.5.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk"
-            )
-            .components(separatedBy: .newlines)
-            .filter { !$0.contains("-Xwrapped-swift") }
-
-        let files = compilerArguments.filter {
+    for action in output.actions {
+        let arguments = action.arguments
+            .filter {
+                $0.hasSuffix(".swift") || $0.hasPrefix("-I") || $0 == "-sdk" || $0 == "__BAZEL_XCODE_SDKROOT__"
+            }
+            .map {
+                $0
+                    .replacingOccurrences(of: "Sources/", with: "\(FileManager.default.currentDirectoryPath)/Sources/")
+                    .replacingOccurrences(of: "bazel-out/", with: "\(FileManager.default.currentDirectoryPath)/bazel-out/")
+                    .replacingOccurrences(of: "__BAZEL_XCODE_SDKROOT__", with: sdkDir)
+                    .replacingOccurrences(of: "__BAZEL_XCODE_DEVELOPER_DIR__", with: developerDir)
+            }
+        let files = arguments.filter {
             $0.hasSuffix(".swift")
         }
         let newEntries = files.map {
-            CompilationDatabaseEntry.init(file: $0, arguments: compilerArguments)
+            CompilationDatabaseEntry.init(file: $0, arguments: arguments)
         }
         entries.append(contentsOf: newEntries)
     }
@@ -39,4 +44,12 @@ func bazel(arguments: [String]) throws {
     let outputUrl = URL(fileURLWithPath: outputPath)
     try outputUrl.deletingLastPathComponent().mkdir()
     try entries.encode(to: outputUrl)
+}
+
+struct Output: Codable {
+    let actions: [Action]
+}
+
+struct Action: Codable {
+    let arguments: [String]
 }

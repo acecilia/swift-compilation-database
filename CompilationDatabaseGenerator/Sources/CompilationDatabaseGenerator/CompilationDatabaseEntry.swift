@@ -8,7 +8,7 @@ struct CompilationDatabaseEntry: Codable {
 extension Array where Element == CompilationDatabaseEntry {
     func encode(to path: URL) throws {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes]
+        encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
         let data = try encoder.encode(self)
         try data.write(to: path)
     }
