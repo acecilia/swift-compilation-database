@@ -14,17 +14,15 @@ func bazel(arguments: [String]) throws {
     let targets = try run("bazelisk query 'kind('swift_library', //...)'")
         .trimmingCharacters(in: .whitespacesAndNewlines)
         .components(separatedBy: .newlines)
-        .joined(separator: " + ")
-    let outputString = try run("bazel aquery 'mnemonic('SwiftCompile', \(targets))' --output=jsonproto")
+    _ = try run("bazel build \(targets.joined(separator: " "))")
+    let outputString = try run("bazel aquery 'mnemonic('SwiftCompile', \(targets.joined(separator: " + ")))' --output=jsonproto")
     let decoder = JSONDecoder()
     let output = try decoder.decode(Output.self, from: Data(outputString.utf8))
 
     var entries: [CompilationDatabaseEntry] = []
     for action in output.actions {
-        let arguments = action.arguments
-            .filter {
-                $0.hasSuffix(".swift") || $0.hasPrefix("-I") || $0 == "-sdk" || $0 == "__BAZEL_XCODE_SDKROOT__"
-            }
+        let patchedArguments = Array(action.arguments.dropFirst(2))
+            .filter { !$0.contains("-Xwrapped-swift") }
             .map {
                 $0
                     .replacingOccurrences(of: "Sources/", with: "\(FileManager.default.currentDirectoryPath)/Sources/")
@@ -32,11 +30,12 @@ func bazel(arguments: [String]) throws {
                     .replacingOccurrences(of: "__BAZEL_XCODE_SDKROOT__", with: sdkDir)
                     .replacingOccurrences(of: "__BAZEL_XCODE_DEVELOPER_DIR__", with: developerDir)
             }
-        let files = arguments.filter {
+
+        let files = patchedArguments.filter {
             $0.hasSuffix(".swift")
         }
         let newEntries = files.map {
-            CompilationDatabaseEntry.init(file: $0, arguments: arguments)
+            CompilationDatabaseEntry(file: $0, arguments: patchedArguments)
         }
         entries.append(contentsOf: newEntries)
     }
@@ -44,6 +43,8 @@ func bazel(arguments: [String]) throws {
     let outputUrl = URL(fileURLWithPath: outputPath)
     try outputUrl.deletingLastPathComponent().mkdir()
     try entries.encode(to: outputUrl)
+
+    try outputString.write(to: outputUrl.appendingPathExtension("raw.json"), atomically: true, encoding: .utf8)
 }
 
 struct Output: Codable {

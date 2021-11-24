@@ -26,6 +26,7 @@ func xcodebuild(arguments: [String]) throws {
             continue
         }
         let patchedArguments = Array(arguments.dropFirst()).expandingResponseFiles
+
         let files = patchedArguments.filter { $0.hasSuffix(".swift") }
         for file in files {
             let entry = CompilationDatabaseEntry(file: file, arguments: patchedArguments)
