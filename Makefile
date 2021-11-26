@@ -3,7 +3,7 @@ setup:
 	rm -rf outputs
 	mkdir outputs
 
-gen_project:
+xcodegen:
 	mint run yonaskolb/XcodeGen@2.25.0
 
 # Xcode 12.5.1 at the time of writing
@@ -31,5 +31,5 @@ bazel_build:
 	bazelisk build -s ...
 
 go_with_bazel_compilation_database: setup generate_compilation_database_from_bazel run_swiftlint_using_compilation_database
-go_with_xcodebuild_compilation_database: setup gen_project generate_xcodebuild_log generate_compilation_database_from_xcodebuild run_swiftlint_using_compilation_database
-go_with_xcodebuild: setup gen_project generate_xcodebuild_log run_swiftlint_using_xcodebuild_log
+go_with_xcodebuild_compilation_database: setup xcodegen generate_xcodebuild_log generate_compilation_database_from_xcodebuild run_swiftlint_using_compilation_database
+go_with_xcodebuild: setup xcodegen generate_xcodebuild_log run_swiftlint_using_xcodebuild_log
