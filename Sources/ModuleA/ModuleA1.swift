@@ -6,4 +6,7 @@ public func sayHi1() {
 
 public func unusedPublic() { }
 func unusedInternal() { }
+
+// swiftlint:disable all
+// swiftlint:enable unused_declaration
 private func unusedPrivate() { }
