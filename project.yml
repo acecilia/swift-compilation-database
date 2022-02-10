@@ -12,3 +12,9 @@ targets:
     sources: [Sources/ModuleB]
     dependencies: 
       - target: "ModuleA"
+      - target: "TagCrashModule"
+
+  TagCrashModule:
+    type: framework
+    platform: iOS
+    sources: [Sources/TagCrashModule]

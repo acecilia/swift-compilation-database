@@ -18,8 +18,8 @@ func bazel(arguments: [String]) throws {
     let targets = try run("bazelisk query 'kind('swift_library', //...)'")
         .trimmingCharacters(in: .whitespacesAndNewlines)
         .components(separatedBy: .newlines)
-    _ = try run("bazel build --config='public-ios' \(targets.joined(separator: " "))")
-    let outputString = try run("bazel aquery --config='public-ios' 'mnemonic('SwiftCompile', \(targets.joined(separator: " + ")))' --output=jsonproto")
+    _ = try run("bazel build \(targets.joined(separator: " "))")
+    let outputString = try run("bazel aquery 'mnemonic('SwiftCompile', \(targets.joined(separator: " + ")))' --output=jsonproto")
     let decoder = JSONDecoder()
     let output = try decoder.decode(Output.self, from: Data(outputString.utf8))
 

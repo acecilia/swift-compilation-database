@@ -8,5 +8,13 @@ swift_library(
 swift_library(
     name = "ModuleB", 
     srcs = glob(["Sources/ModuleB/**/*.swift"]),
-    deps = [":ModuleA"],
+    deps = [
+        ":ModuleA",
+        ":TagCrashModule",
+    ],
+)
+
+swift_library(
+    name = "TagCrashModule", 
+    srcs = glob(["Sources/TagCrashModule/**/*.swift"]),
 )
